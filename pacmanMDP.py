@@ -21,6 +21,7 @@ from pacman import GameState, GameStateData
 from game import Actions, Directions
 import random
 
+from pacman import TIME_PENALTY
 
 class PacmanMDP(mdp.MarkovDecisionProcess):
     """
@@ -42,21 +43,19 @@ class PacmanMDP(mdp.MarkovDecisionProcess):
         self.walls = startingGameState.getWalls()
         self.grid_width = self.walls.width
         self.grid_height = self.walls.height
-        self.positive_terminal_states = set([(x,y) for x in range(self.grid_width) for y in range(self.grid_height) if startingGameState.hasFood(x,y)])
-
-        # get the negative terminals by finding the ghosts
-        self.negative_terminal_states = set(startingGameState.getGhostPositions())
 
 
-    def setLivingReward(self, reward):
-        """
-        The (negative) reward for exiting "normal" states.
+        self.all_states = set([(x,y) for x in range(self.grid_width) for y in range(self.grid_height) if not self.walls[x][y]])
+        
+        # get the food and ghost exit states
+        self.food_states = set([state for state in self.all_states if startingGameState.hasFood(state[0],state[1])])
+        self.ghost_states = set(startingGameState.getGhostPositions())
 
-        Note that in the R+N text, this reward is on entering
-        a state and therefore is not clearly part of the state's
-        future rewards.
-        """
-        self.livingReward = reward
+        # We need a true terminal state where all of the "food exit" and "ghost exit" states can exit to. 
+        # We set this state to be (0,0) which is always a wall in the map.
+        self.true_terminal_state = (0, 0)
+        self.all_states.add(self.true_terminal_state)
+
 
     def setNoise(self, noise):
         """
@@ -69,14 +68,16 @@ class PacmanMDP(mdp.MarkovDecisionProcess):
         """
         Returns list of valid actions for 'state'.
 
-        Note that you can request moves into walls and
-        that "exit" states transition to the terminal
-        state under the special action "done".
+        Note that you CANNOT request moves into walls.
+        the food and ghost states have the "EXIT" action associated with it, so we can still call 
+        methods like getTransitionStatesAndProbs which requires a state and action. 
+        The terminal state has an action to STAY forever which gives 0 reward
         """
 
         if self.isTerminal(state):
-            # return ['exit',]
-            return ['DONE']
+            return ['STAY']
+        elif state in self.getFoodStates() or state in self.getGhostStates():
+            return ['EXIT']
 
         possible_actions = []
         for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
@@ -91,55 +92,64 @@ class PacmanMDP(mdp.MarkovDecisionProcess):
         """
         Return list of all states.
         """
-        # The true terminal state.
-        grid_width = self.walls.width
-        grid_height = self.walls.height
-        return [(x,y) for x in range(grid_width) for y in range(grid_height) if not self.walls[x][y]]
+        return self.all_states
+    
+    def getFoodStates(self):
+        return self.food_states
+    
+    def getGhostStates(self):
+        return self.ghost_states
 
     def getReward(self, state, action, nextState):
         """
-        Get reward for state, action, nextState transition.
+        Get reward for state, action transition.
 
-        Note that the reward depends only on the state being
-        departed (as in the R+N book examples, which more or
-        less use this convention).
+        Note that the reward depends only on the state being departed as in the value iteration exmample in the lectures. 
+        We don't actually need the action or nextState arguments but they're included to be consistent with the standard definition of reward function
+        All non food or ghost states have a reward of -1 for any action
+        Food states have a reward of 510 for exiting, with 10 coming from consumong a food and 500 for winning the game.
+        Ghost states have a reward of -500 for exiting
+        The terminal state has a reward of 0. 
         """
-        # TODO what's the positive and negative reward
-        if nextState in self.positive_terminal_states:
-            return 509
-        elif nextState in self.negative_terminal_states:
-            return -501
+        if self.isTerminal(state):
+            return 0
+        elif state in self.getFoodStates():
+            return 510
+        elif state in self.getGhostStates():
+            return -500
         else:
-            return -1
+            return -1*TIME_PENALTY
 
     def getStartState(self):
         return self.startingPosition
 
     def isTerminal(self, state):
         """
-        Only the TERMINAL_STATE state is *actually* a terminal state.
+        Only the self.true_terminal_state state is *actually* a terminal state.
         The other "exit" states are technically non-terminals with
         a single action "exit" which leads to the true terminal state.
         This convention is to make the grids line up with the examples
-        in the R+N textbook.
+        in the lecture content.
         """
-        return state in self.positive_terminal_states or state in self.negative_terminal_states
+        return state == self.true_terminal_state
 
 
     def getTransitionStatesAndProbs(self, state, action):
         """
-        Returns list of (nextState, prob) pairs
-        representing the states reachable
-        from 'state' by taking 'action' along
-        with their transition probabilities.
+        Returns list of (nextState, prob) pairs representing the states reachable from 'state' by taking 'action' along
+        with their transition probabilities. 
+        If an action would lead Pac-Man to hit a wall then the result is that he stays in place, and nextState=state.
         """
 
         if action not in self.getPossibleActions(state):
             raise "Illegal action!"
 
-        # if terminal then you should stay there
+        # remain in the terminal state forever
         elif self.isTerminal(state):
-            return []
+            return [(self.true_terminal_state, 1)]
+        # only place to go from an exit state is the terminal state
+        elif state in self.getFoodStates() or state in self.getGhostStates():
+            return [(self.true_terminal_state, 1)]
 
         # store the transitions
         successors = []
@@ -176,11 +186,11 @@ class PacmanMDP(mdp.MarkovDecisionProcess):
         return successors
 
 
-    def apply_noise_to_action(self, state, action):
+    def applyNoiseToAction(self, state, action):
         """
-        Used by the pacman agent to simulate having the MDP chance of moving the wrong direction
+        Used by the Q1 agent to simulate having the MDP chance of moving the wrong direction.
         """
-
+        # print(action)
         sample = random.random()
 
         # try and move right

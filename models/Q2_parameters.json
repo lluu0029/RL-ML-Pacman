@@ -1,0 +1,17 @@
+{
+"tiny": {
+    "epsilon":0,
+    "alpha":0, 
+    "gamma": 0
+    },
+"small": {
+    "epsilon":0,
+    "alpha":0, 
+    "gamma": 0
+    },
+"medium": {
+    "epsilon":0,
+    "alpha":0, 
+    "gamma": 0
+    }
+}

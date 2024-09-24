@@ -145,7 +145,8 @@ def loadLabelsFile(filename, n):
 def loadPacmanStatesFile(filename, n):
 
     with open(filename, 'rb') as f:
-      result = pickle.load(f)
+        lines = [line.rstrip(b"\r\n") for line in f.readlines()]
+        result = pickle.loads(b"\n".join(lines))
 
     # f = open(filename, 'r')
     # result = pickle.load(f)

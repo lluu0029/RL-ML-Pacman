@@ -11,54 +11,84 @@
 # Student side autograding was added by Brad Miller, Nick Hay, and
 # Pieter Abbeel (pabbeel@cs.berkeley.edu).
 
-
-# Perceptron implementation for apprenticeship learning
 import util
 from pacman import GameState
 import random
 import numpy as np
 from pacman import Directions
-import matplotlib.pyplot as plt
-# from data_classifier_new import convertToArray
 import math
 import numpy as np
+from featureExtraction import FEATURE_NAMES
 
 PRINT = True
 
 
-class SingleLayerPerceptronPacman():
+class PerceptronPacman:
 
-    def __init__(self, num_weights=5, num_iterations=20, learning_rate=1):
+    def __init__(self, num_train_iterations=20, learning_rate=1):
 
-        # weight initialization
-        # model parameters initialization
-
-        # initialise all features to be 1s
-        self.weights = np.ones(num_weights)
-
-        self.max_iterations = num_iterations
+        self.max_iterations = num_train_iterations
         self.learning_rate = learning_rate
+
+        # A list of which features to include by name. To exclude a feature comment out the line with that feature name
+        feature_names_to_use = [
+            'closestFood', 
+            'closestFoodNow',
+            'closestGhost',
+            'closestGhostNow',
+            'closestScaredGhost',
+            'closestScaredGhostNow',
+            'eatenByGhost',
+            'eatsCapsule',
+            'eatsFood',
+            "foodCount",
+            'foodWithinFiveSpaces',
+            'foodWithinNineSpaces',
+            'foodWithinThreeSpaces',  
+            'furthestFood', 
+            'numberAvailableActions',
+            "ratioCapsuleDistance",
+            "ratioFoodDistance",
+            "ratioGhostDistance",
+            "ratioScaredGhostDistance"
+            ]
+        
+        # we start our indexing from 1 because the bias term is at index 0 in the data set
+        feature_name_to_idx = dict(zip(FEATURE_NAMES, np.arange(1, len(FEATURE_NAMES) + 1)))
+
+        # a list of the indices for the features that should be used. We always include 0 for the bias term.
+        self.features_to_use = [0] + [feature_name_to_idx[feature_name] for feature_name in feature_names_to_use]
+
+        "*** YOUR CODE HERE ***"
 
 
     def predict(self, feature_vector):
         """
-        This function should take a feature vector as a numpy array and compute
-        the dot product of the weights of your perceptron with the values of features.
+        This function should take a feature vector as a numpy array and pass it through your perceptron and output activation function
 
         THE FEATURE VECTOR WILL HAVE AN ENTRY FOR BIAS ALREADY AT INDEX 0.
-
-        Then the result of this computation should be passed through your activation function
-
-        For example if x=feature_vector, and ReLU is the activation function
-        this function should compute ReLU(x dot weights)
         """
+        # filter the data to only include your chosen features. We might not need to do this if we're working with training data that has already been filtered.
+        if len(feature_vector) > len(self.features_to_use):
+            vector_to_classify = feature_vector[self.features_to_use]
+        else:
+            vector_to_classify = feature_vector
 
         "*** YOUR CODE HERE ***"
         util.raiseNotDefined()
 
-    def activation(self, x):
+
+    def activationHidden(self, x):
         """
-        Implement your chosen activation function here.
+        Implement your chosen activation function for any hidden layers here.
+        """
+
+        "*** YOUR CODE HERE ***"
+        pass
+
+    def activationOutput(self, x):
+        """
+        Implement your chosen activation function for the output here.
         """
 
         "*** YOUR CODE HERE ***"
@@ -68,9 +98,10 @@ class SingleLayerPerceptronPacman():
         """
         This function should take a data set and corresponding labels and compute the performance of the perceptron.
         You might for example use accuracy for classification, but you can implement whatever performance measure
-        you think is suitable.
+        you think is suitable. You aren't evaluated what you choose here. 
+        This function is just used for you to assess the performance of your training.
 
-        The data should be a 2D numpy array where the each row is a feature vector
+        The data should be a 2D numpy array where each row is a feature vector
 
         THE FEATURE VECTOR WILL HAVE AN ENTRY FOR BIAS ALREADY AT INDEX 0.
 
@@ -78,6 +109,9 @@ class SingleLayerPerceptronPacman():
         corresponding label for the feature vector at index i in the appropriate data set. For example, labels[1]
         is the label for the feature at data[1]
         """
+
+        # filter the data to only include your chosen features
+        X_eval = data[:, self.features_to_use]
 
         "*** YOUR CODE HERE ***"
         util.raiseNotDefined()
@@ -96,7 +130,25 @@ class SingleLayerPerceptronPacman():
         is the label for the feature at trainingData[1]
         """
 
+        # filter the data to only include your chosen features. Use the validation data however you like.
+        X_train = trainingData[:, self.features_to_use]
+        X_validate = validationData[:, self.features_to_use]
+
         "*** YOUR CODE HERE ***"
         util.raiseNotDefined()
 
+    def save_weights(self, weights_path):
+        """
+        Saves your weights to a .model file. You're free to format this however you like.
+        For example with a single layer perceptron you could just save a single line with all the weights.
+        """
+        "*** YOUR CODE HERE ***"
+        util.raiseNotDefined()
 
+    def load_weights(self, weights_path):
+        """
+        Loads your weights from a .model file. 
+        Whatever you do here should work with the formatting of your save_weights function.
+        """
+        "*** YOUR CODE HERE ***"
+        util.raiseNotDefined()

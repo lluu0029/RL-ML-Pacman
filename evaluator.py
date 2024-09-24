@@ -1,14 +1,19 @@
-import json
+import glob
 import os
-import re
 import subprocess
+import sys
+from itertools import chain, product
+from optparse import OptionParser
+
+import json
+import re
 from typing import Dict, List
 
 import pandas as pd
 from tqdm import tqdm
 
 
-def disclaimer() -> None:
+def disclaimer() -> bool:
     message = """
     -------------------------------------------------------------------------------
                                     ATTENTION
@@ -17,12 +22,13 @@ def disclaimer() -> None:
     updated with the latest code changes puts your work at risk of not being 
     evaluated correctly.
     -------------------------------------------------------------------------------
-    I CONFIRM I HAVE PULLED THE LATEST VERSION OF ASSIGNMENT: [y/N]"""
+    I CONFIRM I HAVE PULLED THE LATEST VERSION OF ASSIGNMENT: [y/N] """
 
-    if input(message).lower() != "y":
-        print("", "You MUST!! pull the latest version of the assignment and try again", \
-              "This may cause conflicts please accept all incoming changes.", sep="\n")
-        exit(1)
+    return input(message)
+
+def linear_product(parameters: Dict) -> List[str]:
+    for experiment in product(*parameters.values()):
+        yield list(chain(*zip(parameters, experiment)))
 
 
 def run(command: List[str]) -> subprocess.CompletedProcess:
@@ -43,179 +49,152 @@ def run(command: List[str]) -> subprocess.CompletedProcess:
 
     return retval
 
+def readCommand( argv ):
+    """
+    Processes the command used to run pacman from the command line.
+    """
+    from optparse import OptionParser
+    usageStr = """
+    USAGE:      python evalutor.py <options>
+    """
+    parser = OptionParser(usageStr)
 
-def read_model_params(file_name: str) -> Dict:
-    with open(file_name, 'r', encoding="utf-8") as f:
-        contents = f.read()
+    parser.add_option('--q1', help='Whether to run q1 or not', dest='q1', action='store_false', default=True)
+    parser.add_option('--q2', help='Whether to run q2 or not', dest='q2', action='store_false', default=True)
+    parser.add_option('--q3', help='Whether to run q3 or not', dest='q3', action='store_false', default=True)
 
-        regex_search = re.search(r"^#.*({.*})$", contents, re.MULTILINE)
-        if regex_search is None:
-            print(f"[Model Error] Could not find params for model in {file_name}")
-            exit(1)
+    options, otherjunk = parser.parse_args(argv)
+    args = dict()
 
-        param_string = regex_search.group(1)
-        param_string = param_string.replace("'", '"')
-        try:
-            param = json.loads(param_string)
-        except json.JSONDecodeError:
-            print(f"[Model Error]: params are not in valid format {param_string}")
-            exit(1)
+    args['q1'] = options.q1
+    args['q2'] = options.q2
+    args['q3'] = options.q3
 
-        return param
+    return args
 
+
+def get_q1_parameters(layout_name, parameters_json):
+    if "VI_small" in layout_name:
+        return parameters_json["small"]["gamma"], 50
+    elif "VI_medium" in layout_name:
+        return parameters_json["medium"]["gamma"], 100
+    else:
+        return parameters_json["big"]["gamma"], 150
+
+def get_q2_parameters(layout_name, parameters_json):
+    if "QL_tiny" in layout_name:
+        return parameters_json["tiny"]["epsilon"], parameters_json["tiny"]["alpha"], parameters_json["tiny"]["gamma"], 100
+    elif "QL_small" in layout_name:
+        return parameters_json["small"]["epsilon"], parameters_json["small"]["alpha"], parameters_json["small"]["gamma"], 200
+    else:
+        return parameters_json["medium"]["epsilon"], parameters_json["medium"]["alpha"], parameters_json["medium"]["gamma"], 300
+    
 
 if __name__ == "__main__":
 
-    # disclaimer()
+    args = readCommand(sys.argv[1:])
 
-    # Construct Experiments
-    question_1a_setup: Dict = {
-        'layout': ['./layouts/q1a_bigMaze.lay', './layouts/q1a_bigMaze2.lay', './layouts/q1a_contoursMaze.lay',
-                   './layouts/q1a_mediumMaze.lay', './layouts/q1a_mediumMaze2.lay', './layouts/q1a_openMaze.lay',
-                   './layouts/q1a_smallMaze.lay', './layouts/q1a_testMaze.lay', './layouts/q1a_tinyMaze.lay',
-                   './layouts/q1a_trickyMaze.lay'],
-        'model': ['./logs/q1a_bigMaze.model', './logs/q1a_bigMaze2.model', './logs/q1a_contoursMaze.model',
-                  './logs/q1a_mediumMaze.model', './logs/q1a_mediumMaze2.model', './logs/q1a_openMaze.model',
-                  './logs/q1a_smallMaze.model', './logs/q1a_testMaze.model', './logs/q1a_tinyMaze.model',
-                  './logs/q1a_trickyMaze.model'],
-        'params': None,
-        'num_games': 20,
-        'average_score': None,
-        'win_rate': None,
+    logs_dir = './logs/'
+    logs = glob.glob(logs_dir + "*.log")
+    for log in logs: os.remove(log)
+
+    with open("./models/Q1_parameters.json") as params:
+        q1_parameters_json = json.load(params)
+
+    with open("./models/Q2_parameters.json") as params:
+        q2_parameters_json = json.load(params)
+
+    layouts_dir = "./layouts/"
+    question_1_pattern = "VI_*.lay"
+    question_1_layouts = glob.glob(layouts_dir + question_1_pattern)
+
+    question_2_pattern = "QL_*.lay"
+    question_2_layouts = glob.glob(layouts_dir + question_2_pattern)
+
+    question_3_pattern = "ML_*.lay"
+    question_3_layouts = glob.glob(layouts_dir + question_3_pattern)
+
+    question_1_setup: Dict = {
+        'layout': question_1_layouts,
+        'average_score': [None] * len(question_1_layouts),
+        'win_rate': [None] * len(question_1_layouts),
     }
 
-    question_1b_setup: Dict = {
-        'layout': ['./layouts/q1b_bigMaze.lay', './layouts/q1b_bigMaze2.lay', './layouts/q1b_contoursMaze.lay',
-                   './layouts/q1b_mediumMaze.lay', './layouts/q1b_mediumMaze2.lay', './layouts/q1b_openMaze.lay',
-                   './layouts/q1b_smallMaze.lay', './layouts/q1b_testMaze.lay', './layouts/q1b_tinyMaze.lay',
-                   './layouts/q1b_trickyMaze.lay'],
-        'model': ['./logs/q1b_bigMaze.model', './logs/q1b_bigMaze2.model', './logs/q1b_contoursMaze.model',
-                  './logs/q1b_mediumMaze.model', './logs/q1b_mediumMaze2.model', './logs/q1b_openMaze.model',
-                  './logs/q1b_smallMaze.model', './logs/q1b_testMaze.model', './logs/q1b_tinyMaze.model',
-                  './logs/q1b_trickyMaze.model'],
-        'params': None,
-        'num_games': 20,
-        'average_score': None,
-        'win_rate': None,
-    }
-
-    question_2a_setup: Dict = {
-        'layout': ['./layouts/q2a_bigMaze.lay', './layouts/q2a_bigMaze2.lay', './layouts/q2a_contoursMaze.lay',
-                   './layouts/q2a_mediumMaze.lay', './layouts/q2a_openMaze.lay', './layouts/q2a_smallMaze.lay',
-                   './layouts/q2a_smallMaze2.lay', './layouts/q2a_testMaze.lay', './layouts/q2a_tinyMaze.lay',
-                   './layouts/q2a_trickyMaze.lay'],
-        'model': ['./logs/q2a_bigMaze.model', './logs/q2a_bigMaze2.model', './logs/q2a_contoursMaze.model',
-                  './logs/q2a_mediumMaze.model', './logs/q2a_openMaze.model', './logs/q2a_smallMaze.model',
-                  './logs/q2a_smallMaze2.model', './logs/q2a_testMaze.model', './logs/q2a_tinyMaze.model',
-                  './logs/q2a_trickyMaze.model'],
-        'params': None,
-        'score': None
-    }
-
-    question_2b_setup: Dict = {
-        'layout': ['./layouts/q2b_bigMaze.lay', './layouts/q2b_bigMaze2.lay', './layouts/q2b_contoursMaze.lay',
-                   './layouts/q2b_mediumMaze.lay', './layouts/q2b_openMaze.lay', './layouts/q2b_smallMaze.lay',
-                   './layouts/q2b_smallMaze2.lay', './layouts/q2b_testMaze.lay', './layouts/q2b_tinyMaze.lay',
-                   './layouts/q2b_trickyMaze.lay'],
-        'model': ['./logs/q2b_bigMaze.model', './logs/q2b_bigMaze2.model', './logs/q2b_contoursMaze.model',
-                  './logs/q2b_mediumMaze.model', './logs/q2b_openMaze.model', './logs/q2b_smallMaze.model',
-                  './logs/q2b_smallMaze2.model', './logs/q2b_testMaze.model', './logs/q2b_tinyMaze.model',
-                  './logs/q2b_trickyMaze.model'],
-        'params': None,
-        'score': None
+    question_2_setup: Dict = {
+        'layout': question_2_layouts,
+        'average_score': [None] * len(question_2_layouts),
+        'win_rate': [None] * len(question_2_layouts),
     }
 
     question_3_setup: Dict = {
-        'layout': ['./layouts/q3_mediumClassic.lay', './layouts/q3_openClassic.lay'],
-        'model': "logs/q3_weights.model",
-        'params': None,
-        'num_games': 20,
-        'average_score': None,
-        'win_rate': None,
+        'layout': question_3_layouts,
+        'average_score': [None] * len(question_3_layouts),
+        'win_rate': [None] * len(question_3_layouts),
     }
 
-    question_1a = pd.DataFrame(question_1a_setup)
-    question_1b = pd.DataFrame(question_1b_setup)
-    question_2a = pd.DataFrame(question_2a_setup)
-    question_2b = pd.DataFrame(question_2b_setup)
+    if disclaimer() != "y":
+        print("")
+        exit()
+
+    question_1 = pd.DataFrame(question_1_setup)
+    question_2 = pd.DataFrame(question_2_setup)
     question_3 = pd.DataFrame(question_3_setup)
+    
+    question_1["gamma"], question_1["iterations"] = zip(*question_1["layout"].apply(lambda l: get_q1_parameters(l, q1_parameters_json)))
+    question_2["epsilon"], question_2["alpha"], question_2["gamma"], question_2["numTrainingEpisodes"] = zip(*question_2["layout"].apply(lambda l: get_q2_parameters(l, q2_parameters_json)))
+    
+    question_1 = question_1.sort_values(by="layout").reset_index(drop=True)
+    question_2 = question_2.sort_values(by="layout").reset_index(drop=True)
+    question_3 = question_3.sort_values(by="layout").reset_index(drop=True)
 
     # Question 1a
-    for index, row in (t := tqdm(question_1a.iterrows(), total=question_1a.shape[0])):
-        if not os.path.isfile(row['model']): continue
-        if not os.path.isfile(row['layout']): continue
+    if args["q1"]:
+        for index, row in (t := tqdm(question_1.iterrows(), total=question_1.shape[0])):
+            if not os.path.isfile(row['layout']): continue
 
-        t.set_description(f"Running Q1a:{row['layout']}")
-        question_1a.at[index, 'params'] = read_model_params(row['model'])
-        command = ['python', 'pacman.py', '-p', 'Q1Agent', '-a', f"pretrained_values={row['model']}", '-l',
-                   row['layout'], '-g', 'StationaryGhost', '-n', str(row['num_games']), '-q']
-        result = run(command)
+            t.set_description(f"Running Q1:{row['layout']}")
+            command = ['python', 'pacman.py', '-l', row['layout'], '-p', 'Q1Agent', '-a',
+            f'discount={row["gamma"]},iterations={row["iterations"]}', '--timeout=1', '-q', '-g', 'StationaryGhost', '-n', '40', '-f']
+            result = run(command)
 
-        re_match = re.search(r"Average\sScore:\s*(.*)$", result.stdout.decode('utf-8'), re.MULTILINE)
-        question_1a.at[index, 'average_score'] = re_match.group(1) if re_match else None
+            re_match = re.search(r"Average\sScore:\s*(.*)$", result.stdout.decode('utf-8'), re.MULTILINE)
+            question_1.at[index, 'average_score'] = re_match.group(1) if re_match else None
 
-        re_match = re.search(r"Win\sRate:\s*(.*)$", result.stdout.decode('utf-8'), re.MULTILINE)
-        question_1a.at[index, 'win_rate'] = re_match.group(1) if re_match else None
+            re_match = re.search(r"Win\sRate:\s*(.*)$", result.stdout.decode('utf-8'), re.MULTILINE)
+            question_1.at[index, 'win_rate'] = re_match.group(1) if re_match else None
 
-    # Question 1b
-    for index, row in (t := tqdm(question_1b.iterrows(), total=question_1b.shape[0])):
-        if not os.path.isfile(row['model']): continue
-        if not os.path.isfile(row['layout']): continue
-        t.set_description(f"Running Q1b:{row['layout']}")
-        question_1b.at[index, 'params'] = read_model_params(row['model'])
-        command = ['python', 'pacman.py', '-p', 'Q1Agent', '-a', f"pretrained_values={row['model']}", '-l',
-                   row['layout'], '-g', 'StationaryGhost', '-n', str(row['num_games']), '-q']
-        result = run(command)
+    # Question 2
+    if args["q2"]:
+        for index, row in (t := tqdm(question_2.iterrows(), total=question_2.shape[0])):
+            if not os.path.isfile(row['layout']): continue
 
-        re_match = re.search(r"Average\sScore:\s*(.*)$", result.stdout.decode('utf-8'), re.MULTILINE)
-        question_1b.at[index, 'average_score'] = re_match.group(1) if re_match else None
+            t.set_description(f"Running Q2:{row['layout']}")
+            command = ['python', 'pacman.py', '-l', row['layout'], '-p', 'Q2Agent', '-a',
+                    f'gamma={row["gamma"]},epsilon={row["epsilon"]},alpha={row["alpha"]}',
+                      '--timeout=5', '-q', '-g', 'StationaryGhost', '-x', f'{row["numTrainingEpisodes"]}', '-n', f'{row["numTrainingEpisodes"] + 1}', '-f']
+            result = run(command)
 
-        re_match = re.search(r"Win\sRate:\s*(.*)$", result.stdout.decode('utf-8'), re.MULTILINE)
-        question_1b.at[index, 'win_rate'] = re_match.group(1) if re_match else None
+            re_match = re.search(r"Average\sScore:\s*(.*)$", result.stdout.decode('utf-8'), re.MULTILINE)
+            question_2.at[index, 'average_score'] = re_match.group(1) if re_match else None
 
-    # Question 2a
-    for index, row in (t := tqdm(question_2a.iterrows(), total=question_2a.shape[0])):
-        if not os.path.isfile(row['model']): continue
-        if not os.path.isfile(row['layout']): continue
-        t.set_description(f"Running Q2a:{row['layout']}")
-        question_2a.at[index, 'params'] = read_model_params(row['model'])
-        command = ['python', 'pacman.py', '-p', 'Q2Agent', '-a', f"pretrained_values={row['model']}", '-l',
-                   row['layout'], '-g', 'StationaryGhost', '-q']
-        result = run(command)
+            re_match = re.search(r"Win\sRate:\s*(.*)$", result.stdout.decode('utf-8'), re.MULTILINE)
+            question_2.at[index, 'win_rate'] = re_match.group(1) if re_match else None
 
-        re_match = re.search(r"Scores:\s*(.*)$", result.stdout.decode('utf-8'), re.MULTILINE)
-        question_2a.at[index, 'score'] = re_match.group(1) if re_match else None
+    # Question 1c
+    if args["q3"]:
+        for index, row in (t := tqdm(question_3.iterrows(), total=question_3.shape[0])):
+            if not os.path.isfile(row['layout']): continue
 
-    # Question 2b
-    for index, row in (t := tqdm(question_2b.iterrows(), total=question_2b.shape[0])):
-        if not os.path.isfile(row['model']): continue
-        if not os.path.isfile(row['layout']): continue
+            t.set_description(f"Running Q1c:{row['layout']}")
+            command = ['python', 'pacman.py', '-l', row['layout'], '-p', 'Q3Agent', '--timeout=5', '-q', '-n', '40', '-f']
+            result = run(command)
 
-        t.set_description(f"Running Q2b:{row['layout']}")
-        question_2b.at[index, 'params'] = read_model_params(row['model'])
-        command = ['python', 'pacman.py', '-p', 'Q2Agent', '-a', f"pretrained_values={row['model']}", '-l',
-                   row['layout'], '-g', 'StationaryGhost', '-q']
-        result = run(command)
+            re_match = re.search(r"Average\sScore:\s*(.*)$", result.stdout.decode('utf-8'), re.MULTILINE)
+            question_3.at[index, 'average_score'] = re_match.group(1) if re_match else None
 
-        re_match = re.search(r"Scores:\s*(.*)$", result.stdout.decode('utf-8'), re.MULTILINE)
-        question_2b.at[index, 'score'] = re_match.group(1) if re_match else None
+            re_match = re.search(r"Win\sRate:\s*(.*)$", result.stdout.decode('utf-8'), re.MULTILINE)
+            question_3.at[index, 'win_rate'] = re_match.group(1) if re_match else None
 
-    # Question 3
-    for index, row in (t := tqdm(question_3.iterrows(), total=question_3.shape[0])):
-        if not os.path.isfile(row['model']): continue
-        if not os.path.isfile(row['layout']): continue
-
-        t.set_description(f"Running Q3:{row['layout']}")
-        question_3.at[index, 'params'] = read_model_params(row['model'])
-        command = ['python', 'pacman.py', '-p', 'Q3Agent', '-a', f"weights_path={row['model']}", '-l', row['layout'],
-                   '-g', 'RandomGhost', '-n', str(row['num_games']), '-q']
-        result = run(command)
-
-        re_match = re.search(r"Average\sScore:\s*(.*)$", result.stdout.decode('utf-8'), re.MULTILINE)
-        question_3.at[index, 'average_score'] = re_match.group(1) if re_match else None
-
-        re_match = re.search(r"Win\sRate:\s*(.*)$", result.stdout.decode('utf-8'), re.MULTILINE)
-        question_3.at[index, 'win_rate'] = re_match.group(1) if re_match else None
 
     pd.set_option('display.max_columns', None)
     pd.set_option('display.max_colwidth', None)
@@ -223,11 +202,10 @@ if __name__ == "__main__":
 
     print("\nEvaluation Report")
     print("=" * 160)
-    print(f"Question 1a Results:\n{question_1a.to_markdown()}\n")
-    print(f"Question 1b Results:\n{question_1b.to_markdown()}\n")
+    if args["q1"]: print(f"Question 1 Results:\n{question_1.to_markdown()}\n")
+    if args["q2"]: print(f"Question 2 Results:\n{question_2.to_markdown()}\n")
+    if args["q3"]: print(f"Question 3 Results:\n{question_3.to_markdown()}\n")
 
-    print(f"Question 2a Results:\n{question_2a.to_markdown()}\n")
-    print(f"Question 2b Results:\n{question_2b.to_markdown()}\n")
-
-    print(f"Question 3 Results:\n{question_3.to_markdown()}\n")
     print("=" * 160)
+
+    

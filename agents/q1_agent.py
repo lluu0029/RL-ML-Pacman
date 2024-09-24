@@ -11,7 +11,9 @@
 # Student side autograding was added by Brad Miller, Nick Hay, and
 # Pieter Abbeel (pabbeel@cs.berkeley.edu).
 
-
+#---------------------#
+# DO NOT MODIFY BEGIN #
+#---------------------#
 import util
 
 from agents.learningAgents import ValueEstimationAgent
@@ -20,37 +22,42 @@ import math
 from pacman import GameState
 import random
 import numpy as np
+import json
 
 
 class Q1Agent(ValueEstimationAgent):
     """
-        * Please read learningAgents.py before reading this.*
-
-        Q1 agent is a ValueIterationAgent takes a Markov decision process
-        (see pacmanMDP.py) on initialization and runs value iteration
-        for a given number of iterations using the supplied
-        discount factor.
+    Q1 agent is a ValueIterationAgent takes a Markov decision process
+    (see pacmanMDP.py) on initialization and runs value iteration
+    for a given number of iterations using the supplied
+    discount factor.
     """
 
-    def __init__(self, mdp="PacmanMDP", discount=0.6, iterations=500, pretrained_values=None):
+    def __init__(self, mdp="PacmanMDP", discount=0.5, iterations=200, pretrained_values=None, json_param_file=None, maze_size=None, save_values=False):
         """
           Your value iteration agent should take an mdp on
           construction, run the indicated number of iterations
           and then act according to the resulting policy.
 
-          Some useful mdp methods you will use:
-              mdp.getStates()
-              mdp.getPossibleActions(state)
-              mdp.getTransitionStatesAndProbs(state, action)
-              mdp.getReward(state, action, nextState)
-              mdp.isTerminal(state)
+          Some useful mdp methods you will likely use:
+              self.MDP.getStates()
+              self.MDP.getPossibleActions(state)
+              self.MDP.getTransitionStatesAndProbs(state, action)
+              self.MDP.getReward(state, action)
+              self.MDP.isTerminal(state)
         """
         mdp_func = util.import_by_name('./', mdp)
         self.mdp_func = mdp_func
 
         print('[Q1Agent] using mdp ' + mdp_func.__name__)
 
-        self.discount = float(discount)
+        if json_param_file and maze_size:
+            with open(json_param_file) as parameters_json:
+                params = json.load(parameters_json)
+                self.discount = params[maze_size]["gamma"]
+        else:
+            self.discount = float(discount)
+        
         self.iterations = int(iterations)
 
         if pretrained_values:
@@ -58,31 +65,58 @@ class Q1Agent(ValueEstimationAgent):
         else:
             self.values = None
 
-    ########################################################################
-    ####            CODE FOR YOU TO MODIFY STARTS HERE                  ####
-    ########################################################################
+        # do we want to save values after training? Will be string if read from command line so eval() the string to get a boolean
+        if type(save_values) == str:
+            self.save_values_after_training = eval(save_values)
+        else:
+            self.save_values_after_training = save_values
 
-    def registerInitialState(self, state: GameState):
+    def getValue(self, state: tuple):
+        """
+        Takes an (x,y) tuple and returns the value of the state (computed in registerInitialState or from pretrained values).
+        """
+        return self.values[state[0], state[1]]
+
+    def getAction(self, gameState: GameState):
+        """
+        Returns the action to take at the a location according to the values
+
+        Note: reaching any positive terminal state is considered winning the game and results in +500 points
+        To achieve this we need the ReachedPositiveTerminalStateException
+        """
+
+        pacman_location = gameState.getPacmanPosition()
+        if pacman_location in self.MDP.getFoodStates():
+            raise util.ReachedPositiveTerminalStateException("Reached a Positive Terminal State")
+        else:
+            best_action = self.computePolicyFromValues(pacman_location)
+            return self.MDP.applyNoiseToAction(pacman_location, best_action)
+
+    def registerInitialState(self, gameState: GameState):
 
         # set up the mdp with the agent starting state
-        self.MDP = self.mdp_func(state)
+        self.MDP = self.mdp_func(gameState)
 
         # if we haven't solved the mdp yet or are not using pretrained weights
         if self.values is None:
 
             print("solving MDP")
-            possible_states = self.MDP.getStates()
             self.values = np.zeros((self.MDP.grid_width, self.MDP.grid_height))
 
-            # Write value iteration code here
-            "*** YOUR CODE STARTS HERE ***"
-            util.raiseNotDefined()
-            "*** YOUR CODE ENDS HERE ***"
+            #-------------------#
+            # DO NOT MODIFY END #
+            #-------------------#
+            
+            # VALUE ITERATION STARTS HERE
 
-            np.savetxt(f"./logs/{state.data.layout.layoutFileName[:-4]}.model", self.values,
-                       header=f"{{'discount': {self.discount}, 'iterations': {self.iterations}}}")
+            # VALUE ITERATION ENDS HERE
+            # Save the learnt values to a file for you if want to inspect them
+            if self.save_values_after_training:
+                print("here")
+                np.savetxt(f"./models/Q1/{gameState.data.layout.layoutFileName[:-4]}.model", self.values,
+                        header=f"{{'discount': {self.discount}, 'iterations': {self.iterations}}}")
 
-    def computeQValueFromValues(self, state, action):
+    def computeQValueFromValues(self, state: tuple, action):
         """
         Compute the Q-value of action in state from the
         value function stored in self.values.
@@ -90,44 +124,13 @@ class Q1Agent(ValueEstimationAgent):
         "*** YOUR CODE HERE ***"
         util.raiseNotDefined()
 
-    def computeActionFromValues(self, state):
+    def computePolicyFromValues(self, state: tuple):
         """
-          The policy is the best action in the given state
-          according to the values currently stored in self.values.
+        The policy is the best action in the given state
+        according to the values currently stored in self.values.
 
-          You may break ties any way you see fit.  Note that if
-          there are no legal actions, which is the case at the
-          terminal state, you should return None.
+        You may break ties any way you see fit.
         """
 
         "*** YOUR CODE HERE ***"
         util.raiseNotDefined()
-
-    ########################################################################
-    ####            CODE FOR YOU TO MODIFY ENDS HERE                    ####
-    ########################################################################
-
-    def getValue(self, state):
-        """
-        Takes an (x,y) tuple and returns the value of the state (computed in __init__).
-        """
-        return self.values[state[0], state[1]]
-
-    def getPolicy(self, state):
-        pacman_loc = state.getPacmanPosition()
-        return self.computeActionFromValues(pacman_loc)
-
-    def getAction(self, state: GameState):
-        "Returns the policy at the state "
-
-        pacman_location = state.getPacmanPosition()
-        if self.MDP.isTerminal(pacman_location):
-            raise util.ReachedTerminalStateException("Reached a Terminal State")
-        else:
-            best_action = self.getPolicy(state)
-            return self.MDP.apply_noise_to_action(pacman_location, best_action)
-
-    def getQValue(self, state, action):
-        return self.computeQValueFromValues(state, action)
-
-

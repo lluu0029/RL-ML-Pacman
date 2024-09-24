@@ -617,7 +617,7 @@ class TimeoutFunctionException(Exception):
     """Exception to raise on a timeout"""
     pass
 
-class ReachedTerminalStateException(Exception):
+class ReachedPositiveTerminalStateException(Exception):
     """Exception to raise agent reaches a terminal state in RL"""
     pass
 

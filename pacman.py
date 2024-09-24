@@ -48,6 +48,7 @@ from game import Actions, Directions, Game, GameStateData
 from layout import getLayout
 from logs import search_logger
 from util import import_by_name, manhattanDistance, nearestPoint
+import numpy as np
 
 ###################################################
 # YOUR INTERFACE TO THE PACMAN WORLD: A GameState #
@@ -248,11 +249,11 @@ class GameState:
 
         return str(self.data)
 
-    def initialize( self, layout, numGhostAgents=1000 ):
+    def initialize( self, layout, numGhostAgents=1000, pacmanRandom=False):
         """
         Creates an initial game state from a layout array (see layout.py).
         """
-        self.data.initialize(layout, numGhostAgents)
+        self.data.initialize(layout, numGhostAgents, pacmanRandom=pacmanRandom)
 
 ############################################################################
 #                     THE HIDDEN SECRETS OF PACMAN                         #
@@ -272,12 +273,12 @@ class ClassicGameRules:
     def __init__(self, timeout=30):
         self.timeout = timeout
 
-    def newGame( self, layout, pacmanAgent, ghostAgents, display, quiet = False, catchExceptions=False):
+    def newGame( self, layout, pacmanAgent, ghostAgents, display, quiet = False, catchExceptions=False, randomPacmanstart=False):
         logger = logging.getLogger('root')
         logger.info('newGame')
         agents = [pacmanAgent] + ghostAgents[:layout.getNumGhosts()]
         initState = GameState()
-        initState.initialize( layout, len(ghostAgents) )
+        initState.initialize( layout, len(ghostAgents) , randomPacmanstart)
         logger.info('layout: '+str(layout))
         game = Game(agents, display, self, catchExceptions=catchExceptions)
         game.state = initState
@@ -562,7 +563,9 @@ def readCommand( argv ):
     args = dict()
 
     # Fix the random seed
-    if options.fixRandomSeed: random.seed('cs188')
+    if options.fixRandomSeed: 
+        random.seed('cs188')
+        np.random.seed(188)
 
     # # Choose a layout
     args['layout'] = options.layout
@@ -696,7 +699,16 @@ def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0
         # pick the next layout. We might cycle around and repeat layouts that we've already done if numGames is large enough
         nextLayout = getLayout(layoutNames[(i % len(layoutNames))])
         if nextLayout == None: raise Exception("The layout file cannot be found")
+        
+        # # i starts at 0 so once i >= numTraning we are testing so start should not be random
+        # if i >= numTraining:
+        #     startPacmanRandom = False
+        # # otherwise we're in training we start the agent at some place random for Q-Learning
+        # else:
+        #     startPacmanRandom = True
 
+        # print(i, numGames, numTraining, startPacmanRandom)
+            
         game = rules.newGame( nextLayout, pacman, ghosts, gameDisplay, beQuiet, catchExceptions)
         game.run()
         if not beQuiet: games.append(game)

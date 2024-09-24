@@ -498,7 +498,7 @@ class GameStateData:
             return '3'
         return 'E'
 
-    def initialize( self, layout, numGhostAgents ):
+    def initialize( self, layout, numGhostAgents, pacmanRandom=False):
         """
         Creates an initial game state from a layout array (see layout.py).
         """
@@ -515,7 +515,14 @@ class GameStateData:
             if not isPacman:
                 if numGhosts == numGhostAgents: continue # Max ghosts reached already
                 else: numGhosts += 1
-            self.agentStates.append( AgentState( Configuration( pos, Directions.STOP), isPacman) )
+            if isPacman and pacmanRandom:
+                while True:
+                    pos = layout.getRandomLegalPosition()
+                    if not layout.food[pos[0]][pos[1]] and pos not in layout.agentPositions:
+                        break
+                self.agentStates.append( AgentState( Configuration( pos, Directions.STOP), isPacman) )
+            else:
+                self.agentStates.append( AgentState( Configuration( pos, Directions.STOP), isPacman) )
         self._eaten = [False for a in self.agentStates]
 
 try:
@@ -678,10 +685,13 @@ class Game:
                         self._agentCrash(agentIndex, quiet=True)
                         self.unmute()
                         return
-                    except ReachedTerminalStateException:
+                    except ReachedPositiveTerminalStateException:
+                        # we set gameOver to True here and break so that this also works for the Q-learning agent who needs the final method called later
                         self.state.data._win = True
                         self.state.data.score += 500
-                        return 
+                        # return
+                        self.gameOver = True
+                        break 
 
                     move_time += time.time() - start_time
                     # TODO find out why this isn't working
@@ -727,6 +737,10 @@ class Game:
             else:
                 self.state = self.state.generateSuccessor( agentIndex, action)
 
+            # Check to see that we haven't reached a state where it's impossible for Pac-Man to end up with a positive score
+            if self.state.data.score + (10* self.state.getNumFood() + 500) < 0:
+                self.state.data._lose = True
+
             # Change the display
             self.display.update( self.state.data )
             ###idx = agentIndex - agentIndex % 2 + 1
@@ -741,7 +755,7 @@ class Game:
 
             if _BOINC_ENABLED:
                 boinc.set_fraction_done(self.getProgress())
-
+        
 
         # inform a learning agent of the game result
         for agentIndex, agent in enumerate(self.agents):

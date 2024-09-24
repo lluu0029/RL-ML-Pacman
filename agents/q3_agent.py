@@ -17,32 +17,43 @@ from game import Agent
 import random
 import game
 import util
-import trainPerceptron
+import featureExtraction
 import samples
 
-from trainPerceptron import enhancedFeatureExtractorPacman, FEATURE_NAMES
-from perceptronPacman import SingleLayerPerceptronPacman
+from featureExtraction import enhancedFeatureExtractorPacman, FEATURE_NAMES
+from perceptronPacman import PerceptronPacman
 import numpy as np
 from pacman import GameState
 
+import torch
 
 class Q3Agent(Agent):
 
-    def __init__(self, weights_path="./logs/q3_weights.model"):
+    def __init__(self, weights_path="./models/q3_weights.model"):
 
         print('-------------Testing trained Perceptron Pacman-------------------')
 
         # Use the same feature function to extract features from
         self.featureFunction = enhancedFeatureExtractorPacman
 
+        # THIS IS WHAT STUDENTS WILL USE TO SAVE THEIR MODEL FILE
+        # self.perceptron = PerceptronPacman()
+        # weights_and_scaling_values = np.loadtxt(weights_path)
+        # # Max and Min values in the data set. Used in agent to scale features.
 
-        self.perceptron = SingleLayerPerceptronPacman()
-        weights_and_scaling_values = np.loadtxt(weights_path)
-        # Max and Min values in the data set. Used in agent to scale features.
+        # self.perceptron.weights = weights_and_scaling_values[0]
+        # self.max_values = weights_and_scaling_values[1]
+        # self.min_values = weights_and_scaling_values[2]
 
-        self.perceptron.weights = weights_and_scaling_values[0]
-        self.max_values = weights_and_scaling_values[1]
-        self.min_values = weights_and_scaling_values[2]
+
+        # We need the max and min feature values to scale new features to be within the same range
+        self.max_values = np.loadtxt("./pacmandata/q3_max_feature_values.txt")
+        self.min_values = np.loadtxt("./pacmandata/q3_min_feature_values.txt")
+
+        self.perceptron = PerceptronPacman()
+        self.perceptron.load_weights(weights_path)
+
+        print(self.perceptron.model.parameters())
 
 
     def getAction(self, state: GameState):
@@ -50,7 +61,6 @@ class Q3Agent(Agent):
         Takes a game state object and selects an action for Pac-man using the trained perceptron
         to determine the quality of each action.
         """
-
         features = self.featureFunction(state)[0]
 
         action_values = {}
