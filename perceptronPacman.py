@@ -18,7 +18,7 @@ import numpy as np
 from pacman import Directions
 import math
 import numpy as np
-from featureExtraction import FEATURE_NAMES
+from featureExtractors import FEATURE_NAMES
 
 PRINT = True
 

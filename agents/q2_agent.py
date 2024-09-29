@@ -196,7 +196,7 @@ class Q2Agent(ReinforcementAgent):
         """
         "*** YOUR CODE HERE ***"
         util.raiseNotDefined()
-    
+       
 
     def epsilonGreedyActionSelection(self, state: GameState):
         """
@@ -209,11 +209,10 @@ class Q2Agent(ReinforcementAgent):
         HINT: You might want to use util.flipCoin(prob)
         HINT: To pick randomly from a list, use random.choice(list)
         HINT: You might want to use self.getLegalActions(state)
-        HINT: You should call computeActionFromQValues(state)
         """
         "*** YOUR CODE HERE ***"
         util.raiseNotDefined()
-
+        
 
     def update(self, state: GameState, action, nextState: GameState, reward):
         """
@@ -226,3 +225,4 @@ class Q2Agent(ReinforcementAgent):
         """
         "*** YOUR CODE HERE ***"
         util.raiseNotDefined()
+

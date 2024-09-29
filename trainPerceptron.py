@@ -90,9 +90,13 @@ def runClassifier(args):
     learning_rate = args['learning_rate']
     weight_save_path = args['weights_path']
 
-    df_train = pd.read_csv("./pacmandata/q3_train.csv")
-    df_validation = pd.read_csv("./pacmandata/q3_validation.csv")
-    df_test = pd.read_csv("./pacmandata/q3_test.csv")
+    df_train = pd.read_csv("./pacmandata/q3_train.csv").head(numTraining)
+    df_validation = pd.read_csv("./pacmandata/q3_validation.csv").head(numTest)
+    df_test = pd.read_csv("./pacmandata/q3_test.csv").head(numTest)
+
+    print(len(df_train))
+    print(len(df_validation))
+    print(len(df_test))
 
     trainingData = df_train.drop(columns=["label"]).to_numpy()
     trainingLabels = df_train["label"]
