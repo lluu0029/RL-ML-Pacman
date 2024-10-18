@@ -111,6 +111,7 @@ class Q1Agent(ValueEstimationAgent):
 
             # VALUE ITERATION ENDS HERE
             # Save the learnt values to a file for you if want to inspect them
+            # test
             if self.save_values_after_training:
                 print("here")
                 np.savetxt(f"./models/Q1/{gameState.data.layout.layoutFileName[:-4]}.model", self.values,
