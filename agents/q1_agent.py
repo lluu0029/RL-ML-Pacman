@@ -108,10 +108,41 @@ class Q1Agent(ValueEstimationAgent):
             #-------------------#
             
             # VALUE ITERATION STARTS HERE
+            print('States: ', self.MDP.getStates())
+            print('Food: ', self.MDP.getFoodStates())
+            print('Ghosts: ', self.MDP.getGhostStates())
+
+            for food in self.MDP.getFoodStates():
+                self.values[food] = 1
+
+            for ghost_pos in self.MDP.getGhostStates():
+                self.values[ghost_pos] = -1
+
+            theta = 1e-3
+
+            while True:
+                # print('\n')
+                # for val in self.values.flat:
+                #     print(val)
+                delta = 0
+                for state in self.MDP.getStates():
+                    if self.MDP.isTerminal(state):
+                        continue
+                    
+                    current_val = self.values[state]
+                    actions = self.MDP.getPossibleActions(state)
+                    action_values = []
+                    for action in actions:
+                        action_values.append(self.computeQValueFromValues(state, action))
+                    # print(max(action_values))
+                    self.values[state] = max(action_values)
+                    delta = max(delta, abs(current_val - self.values[state]))
+                if delta < theta:
+                    break
+
 
             # VALUE ITERATION ENDS HERE
             # Save the learnt values to a file for you if want to inspect them
-            # test
             if self.save_values_after_training:
                 print("here")
                 np.savetxt(f"./models/Q1/{gameState.data.layout.layoutFileName[:-4]}.model", self.values,
@@ -123,7 +154,15 @@ class Q1Agent(ValueEstimationAgent):
         value function stored in self.values.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        all_possible_next_states = self.MDP.getTransitionStatesAndProbs(state, action)
+        action_value = 0
+        for next_state, transition_prob in all_possible_next_states:
+            reward = self.MDP.getReward(state, action, next_state)
+            action_value += transition_prob * (reward + self.discount * self.values[next_state])
+        # print(f'Action value: {action_value}. Reward: {reward}')
+        return action_value
+
+        # print(f'Current state: {state}, All Possible Next States: {all_possible_next_states}')
 
     def computePolicyFromValues(self, state: tuple):
         """
@@ -134,4 +173,45 @@ class Q1Agent(ValueEstimationAgent):
         """
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        policy = {}
+
+        # for state in self.MDP.getStates():
+        #     if self.MDP.isTerminal(state):
+        #         continue
+
+        #     actions = self.MDP.getPossibleActions(state)
+        #     expected_values = []
+        #     action_list = []
+        #     for action in actions:
+        #         action_list.append(action)
+        #         action_value = 0
+        #         all_possible_next_states = self.MDP.getTransitionStatesAndProbs(state, action)
+        #         for next_state, transition_prob in all_possible_next_states:
+        #             reward = self.MDP.getReward(state, action, next_state)
+        #             action_value += transition_prob * (reward + self.discount * self.values[next_state])
+        #         expected_values.append(action_value)
+
+        #     best_action_index = np.argmax(expected_values)
+        #     print(state, action_list)
+        #     print('expected values', expected_values)
+        #     print('best action index', best_action_index)
+        #     # # Update the policy for the current state 
+        #     policy[state] = action_list[best_action_index]
+
+        # return action_list[best_action_index]
+
+        actions = self.MDP.getPossibleActions(state)
+        expected_values = []
+        action_list = []
+        for action in actions:
+            action_list.append(action)
+            action_value = 0
+            all_possible_next_states = self.MDP.getTransitionStatesAndProbs(state, action)
+            for next_state, transition_prob in all_possible_next_states:
+                reward = self.MDP.getReward(state, action, next_state)
+                action_value += transition_prob * (reward + self.discount * self.values[next_state])
+            expected_values.append(action_value)
+
+        best_action_index = np.argmax(expected_values)
+        return action_list[best_action_index]
+        
