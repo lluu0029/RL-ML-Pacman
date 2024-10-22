@@ -121,9 +121,6 @@ class Q1Agent(ValueEstimationAgent):
             theta = 1e-3
 
             while True:
-                # print('\n')
-                # for val in self.values.flat:
-                #     print(val)
                 delta = 0
                 for state in self.MDP.getStates():
                     if self.MDP.isTerminal(state):
@@ -173,33 +170,6 @@ class Q1Agent(ValueEstimationAgent):
         """
 
         "*** YOUR CODE HERE ***"
-        policy = {}
-
-        # for state in self.MDP.getStates():
-        #     if self.MDP.isTerminal(state):
-        #         continue
-
-        #     actions = self.MDP.getPossibleActions(state)
-        #     expected_values = []
-        #     action_list = []
-        #     for action in actions:
-        #         action_list.append(action)
-        #         action_value = 0
-        #         all_possible_next_states = self.MDP.getTransitionStatesAndProbs(state, action)
-        #         for next_state, transition_prob in all_possible_next_states:
-        #             reward = self.MDP.getReward(state, action, next_state)
-        #             action_value += transition_prob * (reward + self.discount * self.values[next_state])
-        #         expected_values.append(action_value)
-
-        #     best_action_index = np.argmax(expected_values)
-        #     print(state, action_list)
-        #     print('expected values', expected_values)
-        #     print('best action index', best_action_index)
-        #     # # Update the policy for the current state 
-        #     policy[state] = action_list[best_action_index]
-
-        # return action_list[best_action_index]
-
         actions = self.MDP.getPossibleActions(state)
         expected_values = []
         action_list = []
