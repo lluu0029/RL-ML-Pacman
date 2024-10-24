@@ -108,15 +108,15 @@ class Q1Agent(ValueEstimationAgent):
             #-------------------#
             
             # VALUE ITERATION STARTS HERE
-            print('States: ', self.MDP.getStates())
-            print('Food: ', self.MDP.getFoodStates())
-            print('Ghosts: ', self.MDP.getGhostStates())
+            # print('States: ', self.MDP.getStates())
+            # print('Food: ', self.MDP.getFoodStates())
+            # print('Ghosts: ', self.MDP.getGhostStates())
 
-            for food in self.MDP.getFoodStates():
-                self.values[food] = 1
+            # for food in self.MDP.getFoodStates():
+            #     self.values[food] = 1
 
-            for ghost_pos in self.MDP.getGhostStates():
-                self.values[ghost_pos] = -1
+            # for ghost_pos in self.MDP.getGhostStates():
+            #     self.values[ghost_pos] = -1
 
             theta = 1e-3
 
@@ -137,7 +137,7 @@ class Q1Agent(ValueEstimationAgent):
                 if delta < theta:
                     break
 
-
+            # print('Final mdp: ', self.values)
             # VALUE ITERATION ENDS HERE
             # Save the learnt values to a file for you if want to inspect them
             if self.save_values_after_training:
