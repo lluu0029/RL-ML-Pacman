@@ -170,7 +170,12 @@ class Q2Agent(ReinforcementAgent):
           or the Q node value otherwise
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        x, y = state
+        # if (x, y, self.getActionIndex(action)) not in self.Q_values:
+        #     return 0.0
+        
+        return self.Q_values[x, y, self.getActionIndex(action)]
+    
 
     def computeValueFromQValues(self, state: GameState):
         """
@@ -184,7 +189,16 @@ class Q2Agent(ReinforcementAgent):
         """
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        state_pos = state.getPacmanPosition()
+        legal_actions = self.getLegalActions(state)
+        if len(legal_actions) == 0:
+            return 0.0
+
+        q_values = []
+        for action in legal_actions:
+            q_values.append(self.getQValue(state_pos, action))
+        
+        return max(q_values)
 
 
     def computeActionFromQValues(self, state: GameState):
@@ -195,7 +209,26 @@ class Q2Agent(ReinforcementAgent):
           HINT: This function should be a strict max over the Q values, not an epsilon greedy
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        pacman_pos = state.getPacmanPosition()
+        if pacman_pos in self.food_locations or pacman_pos in state.getGhostPositions():
+        # if pacman_pos in self.food_locations:
+            return None
+        
+        legal_actions = self.getLegalActions(state)
+        if len(legal_actions) == 0:
+            return None
+
+        q_values = []
+        for action in legal_actions:
+            q_values.append(self.getQValue(pacman_pos, action))
+
+        best_action_index = np.argmax(q_values)
+        return legal_actions[best_action_index]
+
+        # best_action = np.argmax(self.Q_values[pacman_pos[0], pacman_pos[1]])
+        # print('Best action returned: ', best_action)
+        # actions = {0: Directions.NORTH, 1: Directions.SOUTH, 2: Directions.EAST, 3: Directions.WEST}
+        # return actions[best_action]
        
 
     def epsilonGreedyActionSelection(self, state: GameState):
@@ -211,7 +244,24 @@ class Q2Agent(ReinforcementAgent):
         HINT: You might want to use self.getLegalActions(state)
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        legal_actions = self.getLegalActions(state)
+
+        if len(legal_actions) == 0:
+            return None
+
+        pacman_pos = state.getPacmanPosition()
+        rand_int = random.random()
+        if rand_int < self.epsilon:
+            return random.choice(legal_actions)
+        else:
+            # action = np.argmax(self.Q_values[pacman_pos[0], pacman_pos[1]])
+            # actions = {0: Directions.NORTH, 1: Directions.SOUTH, 2: Directions.EAST, 3: Directions.WEST}
+            # return actions[action]
+            q_values = []
+            for action in legal_actions:
+                q_values.append(self.getQValue(pacman_pos, action))
+            best_action_index = np.argmax(q_values)
+            return legal_actions[best_action_index]
         
 
     def update(self, state: GameState, action, nextState: GameState, reward):
@@ -224,5 +274,12 @@ class Q2Agent(ReinforcementAgent):
           it will be called on your behalf
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        state_pos = state.getPacmanPosition()
+        print(f'State pos: {state_pos}, Action: {action}')
+        action_ind = self.getActionIndex(action)
 
+        current_q = self.getQValue(state_pos, action)
+        next_q = self.computeValueFromQValues(nextState)
+
+        # self.Q_values[state_pos[0], state_pos[1], action_ind] += self.alpha * (reward + self.discount * np.max(self.Q_values[next_state_pos[0], next_state_pos[1]])) - self.Q_values[state_pos[0], state_pos[1], action_ind]
+        self.Q_values[state_pos[0], state_pos[1], action_ind] += self.alpha * (reward + self.discount * next_q - current_q)
