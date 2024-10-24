@@ -1,9 +1,9 @@
 {
 "small": { 
-    "gamma": 1
+    "gamma": 0.99
     },
 "medium": {
-    "gamma": 0.99
+    "gamma": 1
     },
 "big": {
     "gamma": 0.99
