@@ -12,6 +12,6 @@
 "medium": {
     "epsilon":0.01,
     "alpha":0.6, 
-    "gamma": 0.9
+    "gamma": 0.95
     }
 }
