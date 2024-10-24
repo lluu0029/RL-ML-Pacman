@@ -6,6 +6,6 @@
     "gamma": 1
     },
 "big": {
-    "gamma": 1
+    "gamma": 0.99
     }
 }
