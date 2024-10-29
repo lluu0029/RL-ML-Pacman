@@ -19,7 +19,6 @@ from pacman import Directions
 import math
 import numpy as np
 from featureExtractors import FEATURE_NAMES
-import matplotlib.pyplot as plt
 
 PRINT = True
 
