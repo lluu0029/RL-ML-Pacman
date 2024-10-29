@@ -218,11 +218,11 @@ class Q2Agent(ReinforcementAgent):
         if len(legal_actions) == 0:
             return None
 
-        q_values = []
+        q_values = [] # Q values of all legal actions
         for action in legal_actions:
             q_values.append(self.getQValue(pacman_pos, action))
 
-        best_action_index = np.argmax(q_values)
+        best_action_index = np.argmax(q_values) # Index of the legal action which has the greatest q value
         return legal_actions[best_action_index]
 
         # best_action = np.argmax(self.Q_values[pacman_pos[0], pacman_pos[1]])
@@ -275,7 +275,7 @@ class Q2Agent(ReinforcementAgent):
         """
         "*** YOUR CODE HERE ***"
         state_pos = state.getPacmanPosition()
-        print(f'State pos: {state_pos}, Action: {action}')
+        # print(f'State pos: {state_pos}, Action: {action}')
         action_ind = self.getActionIndex(action)
 
         current_q = self.getQValue(state_pos, action)
