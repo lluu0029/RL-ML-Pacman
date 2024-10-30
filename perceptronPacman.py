@@ -40,17 +40,17 @@ class PerceptronPacman:
             'closestScaredGhostNow',
             'eatenByGhost',
             'eatsCapsule',
-            'eatsFood',
+            # 'eatsFood',
             "foodCount",
             # 'foodWithinFiveSpaces',
             # 'foodWithinNineSpaces',
             # 'foodWithinThreeSpaces',  
             # 'furthestFood', 
-            'numberAvailableActions',
-            "ratioCapsuleDistance",
+            # 'numberAvailableActions',
+            # "ratioCapsuleDistance",
             # "ratioFoodDistance",
             "ratioGhostDistance",
-            "ratioScaredGhostDistance"
+            # "ratioScaredGhostDistance"
             ]
         
         # we start our indexing from 1 because the bias term is at index 0 in the data set
@@ -66,7 +66,7 @@ class PerceptronPacman:
 
         # SLP
         self.input_size = len(self.features_to_use)  # Number of input features
-        self.weights = np.random.randn(self.input_size, 1) * 0.01  # Weights for each feature, shape (input_size, 1)
+        self.weights = np.random.randn(self.input_size, 1) # Weights for each feature, shape (input_size, 1)
         self.bias = np.zeros((1, 1))  # Bias for the output, shape (1, 1)
 
     def predict(self, feature_vector):
@@ -89,10 +89,10 @@ class PerceptronPacman:
             else:
                 vector_to_classify = feature_vector
         else:
-            feature_vector[self.features_to_use]
+            vector_to_classify = feature_vector[self.features_to_use]
         # vector_to_classify = feature_vector[:, self.features_to_use] if feature_vector.ndim > 1 else feature_vector[self.features_to_use]
         # vector_to_classify = feature_vector
-        print(f'Feature vector: {feature_vector}, {type(feature_vector)}, Vector to classify: {vector_to_classify.shape}')
+        # print(f'Feature vector: {feature_vector}, {type(feature_vector)}, Vector to classify: {vector_to_classify.shape}')
         # Calculate the raw output (for batches, use matrix multiplication)
         raw_output = np.dot(vector_to_classify, self.weights) + self.bias
 
@@ -135,7 +135,7 @@ class PerceptronPacman:
         """
 
         # filter the data to only include your chosen features
-        print(f'Data shape: {data.shape}, Length of data: {len(data)}, Features to use: {self.features_to_use}')
+        # print(f'Data shape: {data.shape}, Length of data: {len(data)}, Features to use: {self.features_to_use}')
         # X_eval = data[:, self.features_to_use]
         # if len(data) > len(self.features_to_use):
         #     X_eval = data[:, self.features_to_use]
@@ -149,12 +149,12 @@ class PerceptronPacman:
         else:
             X_eval = data
 
-        print(f'X_eval shape: {X_eval.shape}')
+        # print(f'X_eval shape: {X_eval.shape}')
         predictions = self.predict(X_eval) > 0.5  # Classify based on a 0.5 threshold
         labels = labels.to_numpy().reshape(-1, 1)
         # print(f'Data: {data}, Data shape: {data.shape}, Data type: {type(data)}')
         # print(f'Labels: {labels}, Type: {type(labels)}')
-        print(f'Predictions shape: {predictions.shape}, Labels shape: {labels.shape}')
+        # print(f'Predictions shape: {predictions.shape}, Labels shape: {labels.shape}')
         accuracy = np.mean(predictions == labels)
         return accuracy
 
@@ -195,12 +195,12 @@ class PerceptronPacman:
             # Optional: Calculate and print loss (binary cross-entropy) for monitoring
             if PRINT and iteration % 10 == 0:
                 loss = -np.mean(y_train * np.log(output + 1e-15) + (1 - y_train) * np.log(1 - output + 1e-15))
-                print(f'X_train shape: {X_train.shape}')
+                # print(f'X_train shape: {X_train.shape}')
                 train_accuracy = self.evaluate(X_train, trainingLabels)  # Training accuracy
                 val_accuracy = self.evaluate(X_validate, validationLabels) # Validation accuracy
                 self.training_accuracies.append(train_accuracy)
                 self.validation_accuracies.append(val_accuracy)
-                print(f'Iteration {iteration}, Loss: {loss}, Training Accuracy: {train_accuracy}, Validation Accuracy: {val_accuracy}')
+                # print(f'Iteration {iteration}, Loss: {loss}, Training Accuracy: {train_accuracy}, Validation Accuracy: {val_accuracy}')
 
         # self.plot_accuracies()
 
@@ -235,13 +235,13 @@ class PerceptronPacman:
         self.bias = bias_flat.reshape(self.bias.shape)
         print(f"Weights and bias loaded from {weights_path}")
 
-    def plot_accuracies(self):
-        plt.figure(figsize=(10, 6))
-        plt.plot(range(len(self.training_accuracies)), self.training_accuracies, label='Training Accuracy', color='b')
-        plt.plot(range(len(self.validation_accuracies)), self.validation_accuracies, label='Validation Accuracy', color='r')
-        plt.xlabel('Iterations')
-        plt.ylabel('Accuracy')
-        plt.title('Training and Validation Accuracies Over Iterations')
-        plt.legend()
-        plt.grid(True)
-        plt.show()
+    # def plot_accuracies(self):
+    #     plt.figure(figsize=(10, 6))
+    #     plt.plot(range(len(self.training_accuracies)), self.training_accuracies, label='Training Accuracy', color='b')
+    #     plt.plot(range(len(self.validation_accuracies)), self.validation_accuracies, label='Validation Accuracy', color='r')
+    #     plt.xlabel('Iterations')
+    #     plt.ylabel('Accuracy')
+    #     plt.title('Training and Validation Accuracies Over Iterations')
+    #     plt.legend()
+    #     plt.grid(True)
+    #     plt.show()
