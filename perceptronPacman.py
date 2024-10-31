@@ -42,7 +42,7 @@ class PerceptronPacman:
             'eatenByGhost',
             'eatsCapsule',
             # 'eatsFood',
-            # "foodCount",
+            "foodCount",
             # 'foodWithinFiveSpaces',
             # 'foodWithinNineSpaces',
             # 'foodWithinThreeSpaces',  
