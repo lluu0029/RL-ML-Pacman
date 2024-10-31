@@ -48,7 +48,7 @@ class PerceptronPacman:
             # 'foodWithinThreeSpaces',  
             # 'furthestFood', 
             # 'numberAvailableActions',
-            "ratioCapsuleDistance",
+            # "ratioCapsuleDistance",
             # "ratioFoodDistance",
             "ratioGhostDistance",
             "ratioScaredGhostDistance"
