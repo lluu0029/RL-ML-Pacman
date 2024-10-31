@@ -19,7 +19,7 @@ from pacman import Directions
 import math
 import numpy as np
 from featureExtractors import FEATURE_NAMES
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 PRINT = True
 
@@ -203,7 +203,7 @@ class PerceptronPacman:
                 self.validation_accuracies.append(val_accuracy)
                 # print(f'Iteration {iteration}, Loss: {loss}, Training Accuracy: {train_accuracy}, Validation Accuracy: {val_accuracy}')
 
-        self.plot_accuracies()
+        # self.plot_accuracies()
 
     def save_weights(self, weights_path):
         """
