@@ -19,7 +19,7 @@ from pacman import Directions
 import math
 import numpy as np
 from featureExtractors import FEATURE_NAMES
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 PRINT = True
 
@@ -47,8 +47,8 @@ class PerceptronPacman:
             # 'foodWithinNineSpaces',
             # 'foodWithinThreeSpaces',  
             # 'furthestFood', 
-            # 'numberAvailableActions',
-            # "ratioCapsuleDistance",
+            'numberAvailableActions',
+            "ratioCapsuleDistance",
             # "ratioFoodDistance",
             "ratioGhostDistance",
             "ratioScaredGhostDistance"
@@ -203,7 +203,7 @@ class PerceptronPacman:
                 self.validation_accuracies.append(val_accuracy)
                 # print(f'Iteration {iteration}, Loss: {loss}, Training Accuracy: {train_accuracy}, Validation Accuracy: {val_accuracy}')
 
-        # self.plot_accuracies()
+        self.plot_accuracies()
 
     def save_weights(self, weights_path):
         """
@@ -239,13 +239,30 @@ class PerceptronPacman:
     def plot_accuracies(self):
         # Accuracies only saved every 10 iterations
         x_values = list(range(0, self.max_iterations, 10))
-        
+
+        # Plot for the entire range
         plt.figure(figsize=(10, 6))
         plt.plot(x_values, self.training_accuracies, label='Training Accuracy', color='b')
         plt.plot(x_values, self.validation_accuracies, label='Validation Accuracy', color='r')
         plt.xlabel('Iterations')
         plt.ylabel('Accuracy')
         plt.title('Training and Validation Accuracies Over Iterations')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+
+        # Plot for iterations 1000 to the end
+        start_idx = 1000 // 10  # Dividing by 10 to get the index in the x_values list
+        x_values_trimmed = x_values[start_idx:]
+        training_accuracies_trimmed = self.training_accuracies[start_idx:]
+        validation_accuracies_trimmed = self.validation_accuracies[start_idx:]
+
+        plt.figure(figsize=(10, 6))
+        plt.plot(x_values_trimmed, training_accuracies_trimmed, label='Training Accuracy', color='b')
+        plt.plot(x_values_trimmed, validation_accuracies_trimmed, label='Validation Accuracy', color='r')
+        plt.xlabel('Iterations')
+        plt.ylabel('Accuracy')
+        plt.title('Training and Validation Accuracies (Iterations 1000 to End)')
         plt.legend()
         plt.grid(True)
         plt.show()
