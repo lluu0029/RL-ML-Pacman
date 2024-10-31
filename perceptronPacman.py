@@ -36,9 +36,9 @@ class PerceptronPacman:
             'closestFood', 
             # 'closestFoodNow',
             'closestGhost',
-            'closestGhostNow',
+            # 'closestGhostNow',
             'closestScaredGhost',
-            'closestScaredGhostNow',
+            # 'closestScaredGhostNow',
             'eatenByGhost',
             'eatsCapsule',
             # 'eatsFood',
@@ -252,7 +252,7 @@ class PerceptronPacman:
         plt.show()
 
         # Plot for iterations 1000 to the end
-        start_idx = 1000 // 10  # Dividing by 10 to get the index in the x_values list
+        start_idx = 250 // 10  # Dividing by 10 to get the index in the x_values list
         x_values_trimmed = x_values[start_idx:]
         training_accuracies_trimmed = self.training_accuracies[start_idx:]
         validation_accuracies_trimmed = self.validation_accuracies[start_idx:]
@@ -262,7 +262,7 @@ class PerceptronPacman:
         plt.plot(x_values_trimmed, validation_accuracies_trimmed, label='Validation Accuracy', color='r')
         plt.xlabel('Iterations')
         plt.ylabel('Accuracy')
-        plt.title('Training and Validation Accuracies (Iterations 1000 to End)')
+        plt.title('Training and Validation Accuracies (Iterations 1000 to 10000)')
         plt.legend()
         plt.grid(True)
         plt.show()
