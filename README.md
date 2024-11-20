@@ -1,23 +1,30 @@
-## Assignment 3 Branch
+## Q1 Value Iteration
+The agent uses value iteration to solve the Markov Decision Process (MDP) defined in the PacmanMDP class, and then use the learnt values to play an MDP 
+variant of the Pac-Man game to find the optimal path to a positive terminal (food dot) whilst avoiding negative terminals (ghosts). 
+Implementation in Q1Agent class.
+- **Using command line for a chosen layout, discount factor and number of iterations:**
+```bash
+python pacman.py -l layouts/VI_smallMaze1_1.lay -p Q1Agent -a discount=1,iterations=100 -g StationaryGhost -n 20
+```
 
-This is the assignment 3 branch of the repo for FIT3080. This branch contains all the code you need for assignment 3. To get started with the assignment please follow the instructions below or in the getting started guide to clone the repo. 
-If you are unsure on how to clone our repo and navigate to the relevant branch, or have trouble with the instructions below, please contact us over the Ed forum, in your class or during consultation hours. We're happy to help get you set up for the assignments!
+## Q2 Q-Learning
+The agent uses Q-learning with epsilon greedy action selection to learn an optimal policy for reaching a positive terminal (food dot) whilst avoiding 
+negative terminals (ghosts) through a series of trial and error iteractions with its enviroment.
+Implementation in Q2Agent class.
+- **Using command line for a chosen layout and sample parameters:**
+```bash
+python pacman.py -l layouts/QL_tinyMaze1_1.lay -p Q2Agent -a epsilon=0.01,alpha=0.6,gamma=0.9 -x 100 -n 200 -g StationaryGhost
+```
 
----
-
-## Clone this repository
-
-Run the following in the command line in the directory where you would like this repo to be stored.
-
-git clone --branch assignment3 https://bitbucket.org/shortestpathlab/fit3080.git
-
-You can also use [SourceTree](https://www.sourcetreeapp.com/) to clone the repo without using the command line. We recommend you use the command line as it is good practice and less work overall. 
-If you decide to use SourceTree then be aware that the teaching doesn't have experience with it and may not be able to help you if you get stuck. There should be plenty of resources to help you online though.    
-
----
-
-## Next Steps
-
-Once you have cloned the repository you should finish reading the getting started guide and explore the code. Once you've finished with that you should be very prepared to tackle the assignment!
-
----
+## Q3 Machine Learning
+A single-layer perceptron was trained using a provided dataset that includes actions within a specific game state, labeled as either 0 (weak action) or 1 (strong action). 
+The model was designed to predict the optimal action based on a set of features extracted from a game state. When applied to play Pacman, it achieved a win rate of 71.75% across various game layouts.
+Implementation in PerceptronPacman class.
+- **Using command line for a chosen layout and sample weights:**
+```bash
+python pacman.py -l layouts/ML_mediumClassic.lay -p Q3Agent -a weights_path="models\q3_weights.model"
+```
+- **Using command line for model training:**
+```bash
+python trainPerceptron.py -i num_iterations -l alpha -w weight_save_path
+```
