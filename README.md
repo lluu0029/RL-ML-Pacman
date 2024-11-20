@@ -9,7 +9,7 @@ python pacman.py -l layouts/VI_smallMaze1_1.lay -p Q1Agent -a discount=1,iterati
 
 ## Q2 Q-Learning
 The agent uses Q-learning with epsilon greedy action selection to learn an optimal policy for reaching a positive terminal (food dot) whilst avoiding 
-negative terminals (ghosts) through a series of trial and error interactions with its enviroment.
+negative terminals (ghosts) through a series of trial and error interactions with its environment.
 Implementation in Q2Agent class.
 - **Using command line for a chosen layout and sample parameters:**
 ```bash
